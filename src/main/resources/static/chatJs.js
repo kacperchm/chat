@@ -1,7 +1,9 @@
 var client = null;
+var color;
 
-function showMessage(value, user) {
+function showMessage(value, user, userColor) {
     var newResponse = document.createElement('p');
+    newResponse.style.color = userColor;
     newResponse.appendChild(document.createTextNode(user + ": " + value));
     var response = document.getElementById('response');
     response.appendChild(newResponse)
@@ -9,9 +11,10 @@ function showMessage(value, user) {
 
 function connect() {
     client = Stomp.client('ws://localhost:8080/chat');
+    color = getRandomColor();
     client.connect({}, function (frame) {
         client.subscribe('/topic/messages', function (message) {
-            showMessage(JSON.parse(message.body).value, JSON.parse(message.body).user)
+            showMessage(JSON.parse(message.body).value, JSON.parse(message.body).user, JSON.parse(message.body).userColor)
         })
     })
 }
@@ -19,5 +22,15 @@ function connect() {
 function sendMessage() {
     var messageToSend = document.getElementById('messageToSend').value;
     var user = document.getElementById('user').value;
-    client.send("/app/chat",{},JSON.stringify({'value': messageToSend, 'user': user}));
+    client.send("/app/chat",{},JSON.stringify({'value': messageToSend, 'user': user, 'userColor': color}));
+    document.getElementById('messageToSend').value = "";
+}
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
 }
